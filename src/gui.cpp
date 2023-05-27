@@ -7,7 +7,6 @@
 #include <string>
 #include <vector>
 #include <algorithm>
-#include <thread>
 
 #include "../imgui/imgui.h"
 #include "../imgui/imgui_impl_dx9.h"
@@ -49,7 +48,6 @@ bool ChangeRefreshRate(int desiredRefreshRate, int monitorIndex) {
 			dm.dmDisplayFrequency = desiredRefreshRate;  // Set the desired refresh rate
 
 			if (ChangeDisplaySettingsEx(displayDevice.DeviceName, &dm, NULL, CDS_UPDATEREGISTRY, NULL) == DISP_CHANGE_SUCCESSFUL) {
-				std::this_thread::sleep_for(std::chrono::milliseconds(3000));
 				return true;  // Refresh rate changed successfully
 			}
 		}
