@@ -95,37 +95,68 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 
 
 LRESULT CALLBACK WindowProcess(HWND window, UINT message, WPARAM wideParameter, LPARAM longParameter) {
-	 if (ImGui_ImplWin32_WndProcHandler(window, message, wideParameter, longParameter))
-        return true;
+	if (ImGui_ImplWin32_WndProcHandler(window, message, wideParameter, longParameter))
+		return true;
 
-    switch (message)
-    {
-    case WM_SIZE:
-        if (device != NULL && wideParameter != SIZE_MINIMIZED)
-        {
-            presentParameters.BackBufferWidth = LOWORD(longParameter);
-            presentParameters.BackBufferHeight = HIWORD(longParameter);
-            gui::ResetDevice();
-        }
-        return 0;
-    case WM_SYSCOMMAND:
-        if ((wideParameter & 0xfff0) == SC_KEYMENU) // Disable ALT application menu
-            return 0;
-        break;
-    case WM_DESTROY:
-        ::PostQuitMessage(0);
-        return 0;
-    case WM_DPICHANGED:
-        if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_DpiEnableScaleViewports)
-        {
-            //const int dpi = HIWORD(wParam);
-            //printf("WM_DPICHANGED to %d (%.0f%%)\n", dpi, (float)dpi / 96.0f * 100.0f);
-            const RECT* suggested_rect = (RECT*)longParameter;
-            ::SetWindowPos(window, NULL, suggested_rect->left, suggested_rect->top, suggested_rect->right - suggested_rect->left, suggested_rect->bottom - suggested_rect->top, SWP_NOZORDER | SWP_NOACTIVATE);
-        }
-        break;
-    }
-    return ::DefWindowProc(window, message, wideParameter, longParameter);
+	switch (message) {
+	case WM_CLOSE: {
+		PostQuitMessage(0);
+		gui::isRunning = false;
+	}return 0;
+
+	case WM_DESTROY: {
+		PostQuitMessage(0);
+		gui::isRunning = false;
+	}return 0;
+
+	case WM_SIZE: {
+		if (device && wideParameter != SIZE_MINIMIZED) {
+			presentParameters.BackBufferWidth = LOWORD(longParameter);
+			presentParameters.BackBufferHeight = HIWORD(longParameter);
+			gui::ResetDevice();
+		}
+	}return 0;
+
+	case WM_SYSCOMMAND: {
+		if ((wideParameter & 0xfff0) == SC_KEYMENU) // Disable ALT aplication menu
+			return 0;
+
+	}break;
+
+	case WM_LBUTTONDOWN: {
+		gui::position = MAKEPOINTS(longParameter); //set click points
+	}return 0;
+
+	case WM_MOUSEMOVE: {
+		if (wideParameter == MK_LBUTTON) {
+			const auto points = MAKEPOINTS(longParameter);
+			auto rect = ::RECT{};
+
+			GetWindowRect(gui::window, &rect);
+
+			rect.left += points.x - gui::position.x;
+			rect.top += points.y - gui::position.y;
+
+			if (gui::position.x >= 0 &&
+				gui::position.x <= gui::WIDTH &&
+				gui::position.y >= 0 &&
+				gui::position.y <= 19) {
+				SetWindowPos(
+					gui::window,
+					HWND_TOPMOST,
+					rect.left, rect.top,
+					0, 0,
+					SWP_SHOWWINDOW | SWP_NOSIZE | SWP_NOZORDER);
+			}
+
+		}
+	}return 0;
+
+	default:
+		break;
+	}
+
+	return DefWindowProcW(window, message, wideParameter, longParameter);
 }
 
 void gui::CreateHWindow(LPCWSTR windowName, LPCWSTR className) noexcept {
@@ -270,7 +301,7 @@ void gui::DestroyImGui() noexcept {
 	for (auto& monitor : monitorDataList) {
 		ChangeRefreshRate(monitor.originalRefreshRate, monitor.monitorIndex);
 	}
-
+	outputMessage = "DONE!";
 	ImGui_ImplDX9_Shutdown();
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
