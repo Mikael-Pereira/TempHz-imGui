@@ -243,9 +243,6 @@ void gui::CreateImGui() noexcept {
 	ImGui_ImplWin32_Init(window);
 	ImGui_ImplDX9_Init(device);
 
-	dxViewport = new DX9Viewport(gui::device, 300, 300);
-
-
 	int monitorIndex = 0;
 
 	for (int monitorIndex = 0; monitorIndex < GetSystemMetrics(SM_CMONITORS); ++monitorIndex) {
@@ -309,15 +306,6 @@ void gui::BeginRender() noexcept {
 		ImGui_ImplWin32_NewFrame();
 		ImGui::NewFrame();
 
-}
-
-void gui::DXRender() noexcept {
-	dxViewport->BeginRender(gui::device);
-	
-	RenderRectangle(gui::device, { 0,0 }, { 22,22 }, D3DCOLOR_XRGB(255, 0, 0));
-	RenderCircle(gui::device, { 20,20 }, 10, D3DCOLOR_XRGB(255, 0, 0));
-	
-	dxViewport->EndRender(gui::device);
 }
 
 void gui::Render() noexcept {
