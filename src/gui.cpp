@@ -1,5 +1,6 @@
 #pragma comment(lib, "dxgi.lib")
 #include "gui.h"
+#include "../resource.h"
 
 #include <iostream>
 #include <fstream>
@@ -166,7 +167,7 @@ void gui::CreateHWindow(LPCWSTR windowName, LPCWSTR className) noexcept {
 	windowClass.cbClsExtra = 0L;
 	windowClass.cbWndExtra = 0L;
 	windowClass.hInstance = GetModuleHandle(NULL);
-	windowClass.hIcon = NULL;
+	windowClass.hIcon = LoadIcon(windowClass.hInstance, MAKEINTRESOURCE(IDI_ICON1));
 	windowClass.hCursor = NULL;
 	windowClass.hbrBackground = NULL;
 	windowClass.lpszMenuName = NULL;
