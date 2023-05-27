@@ -5,7 +5,7 @@
 int __stdcall wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR arguments, int commandShow) {
 
 	//create gui
-	gui::CreateHWindow(L"ImGui Docking", L"ImGuiDocking");
+	gui::CreateHWindow(L"TempHz", L"TempHz");
 	gui::CreateDevice();
 	gui::CreateImGui();
 
