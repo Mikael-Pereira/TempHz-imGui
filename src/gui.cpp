@@ -15,7 +15,7 @@
 static LPDIRECT3D9              d3d = NULL;
 static LPDIRECT3DDEVICE9        device = NULL;
 static D3DPRESENT_PARAMETERS    presentParameters = {};
-
+ImGuiIO* pIo;
 
 
 std::string outputMessage = "Refresh rate changer, set any refresh rate and the original one will be restored on close.";
@@ -129,22 +129,22 @@ LRESULT CALLBACK WindowProcess(HWND window, UINT message, WPARAM wideParameter, 
 }
 
 void gui::CreateHWindow(LPCWSTR windowName, LPCWSTR className) noexcept {
-	windowClass.cbSize = sizeof(WNDCLASSEXA);
+	windowClass.cbSize = sizeof(WNDCLASSEX);
 	windowClass.style = CS_CLASSDC;
 	windowClass.lpfnWndProc = WindowProcess;
-	windowClass.cbClsExtra = 0;
-	windowClass.cbWndExtra = 0;
-	windowClass.hInstance = GetModuleHandleA(0);
-	windowClass.hIcon = 0;
-	windowClass.hCursor = 0;
-	windowClass.hbrBackground = 0;
-	windowClass.lpszMenuName = 0;
+	windowClass.cbClsExtra = 0L;
+	windowClass.cbWndExtra = 0L;
+	windowClass.hInstance = GetModuleHandle(NULL);
+	windowClass.hIcon = NULL;
+	windowClass.hCursor = NULL;
+	windowClass.hbrBackground = NULL;
+	windowClass.lpszMenuName = NULL;
 	windowClass.lpszClassName = className;
-	windowClass.hIconSm = 0;
+	windowClass.hIconSm = NULL;
 
 	RegisterClassEx(&windowClass);
 
-	window = CreateWindowEx(0, className, windowName, WS_POPUP, 100, 100, WIDTH, HEIGHT, 0, 0, windowClass.hInstance, 0);
+	window = CreateWindow( windowClass.lpszClassName, windowName, WS_POPUP, 100, 100, WIDTH, HEIGHT, 0, 0, windowClass.hInstance, 0);
 	ShowWindow(window, SW_SHOWDEFAULT);
 	UpdateWindow(window);
 }
@@ -208,13 +208,20 @@ void gui::DestroyDevice() noexcept {
 void gui::CreateImGui() noexcept {
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
-	ImGuiIO& io = ::ImGui::GetIO();
+	auto& io = ImGui::GetIO(); (void)io;
+	pIo = &io;
 
 	io.IniFilename = NULL;
-	io.ConfigFlags = ImGuiConfigFlags_DockingEnable;
 
 	ImGui::StyleColorsDark();
 
+	ImGuiStyle& style = ImGui::GetStyle();
+	if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+	{
+		style.WindowRounding = 0.0f;
+		style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+	}
+	/////////////////////////////////////////////////////////////////////////////////
 	ImGui_ImplWin32_Init(window);
 	ImGui_ImplDX9_Init(device);
 
@@ -271,9 +278,9 @@ void gui::DestroyImGui() noexcept {
 
 void gui::BeginRender() noexcept {
 	MSG message;
-	while (PeekMessage(&message, 0, 0, 0, PM_REMOVE)) {
-		TranslateMessage(&message);
-		DispatchMessage(&message);
+	while (::PeekMessage(&message, 0, 0, 0, PM_REMOVE)) {
+		::TranslateMessage(&message);
+		::DispatchMessage(&message);
 	}
 
 		//Start ImGui frame
@@ -362,8 +369,17 @@ void gui::EndRender() noexcept {
 		ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
 		device->EndScene();
 	}
-	const auto result = device->Present(0, 0, 0, 0);
-	
+
+	if (pIo->ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+	{
+		ImGui::UpdatePlatformWindows();
+		ImGui::RenderPlatformWindowsDefault();
+	}
+
+	HRESULT result = device->Present(NULL, NULL, NULL, NULL);
+	// Handle loss of D3D9 device
+	if (result == D3DERR_DEVICELOST && device->TestCooperativeLevel() == D3DERR_DEVICENOTRESET)
+		ResetDevice();
 		
 
 }
