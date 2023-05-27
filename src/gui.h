@@ -13,12 +13,7 @@ namespace gui {
 	inline WNDCLASSEX windowClass = { };
 
 	inline POINTS position = { };
-
-	inline PDIRECT3D9 d3d = nullptr;
-	inline LPDIRECT3DDEVICE9 device = nullptr;
-	inline D3DPRESENT_PARAMETERS presentParameters = { };
-
-
+	
 	void CreateHWindow(LPCWSTR windowName, LPCWSTR className) noexcept;
 	void DestroyWindow() noexcept;
 
